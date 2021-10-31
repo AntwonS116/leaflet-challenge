@@ -181,7 +181,7 @@ function getRadius(magnitude){
 
 // File path for the Data on tectonic plates
 
-var platesJsonPath = "static/data/PB2002_plates.json"
+var platesJsonPath = "static/data/PB2002_boundaries.json"
 d3.json(platesJsonPath).then(function(platesData){
     var platesLayer = L.geoJson(platesData,{
         style: function(feature) {
