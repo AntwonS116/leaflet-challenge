@@ -1,112 +1,120 @@
-// Get data url
-url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson"
+// Create a initial map object
 
-// Get marker color based on earthquake magnitude
-function getColor(mag) {
-    if (mag >= 5) {
-        return "rgb(240, 107, 107)" 
-    } else {
-        if (mag > 4) {
-            return "rgb(240, 167, 107)"
-        } else {
-            if (mag > 3) {
-                return "rgb(243, 186, 77)"
-            } else {
-                if (mag > 2) {
-                    return "rgb(243, 219, 77)"
-                } else {
-                    if (mag > 1) {
-                        return "rgb(226, 243, 77)"
-                    } else {
-                        return "rgb(183, 243, 77)"
-                    }
-                }
-            }
-        }
-    }
-};
+var myMap = L.map('map',{
+    center:[37.0902, -95.7129],
+    zoom: 5
+})
 
-// Declare function to create map features.
-function createFeatures(earthquakeData) {
-    // Create popup layers using earthquake title, type and magnitude
-    function onEachFeature(feature, layer) {
-        layer.bindPopup("<p>" + feature.properties.title + "</p>" +
-            "<p>Type: " + feature.properties.type + "</p>" +
-            "<p>Magnitude: " + feature.properties.mag + "</p>");
+// Add a tile layer
+
+L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+    attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
+    tileSize: 512,
+    maxZoom: 18,
+    zoomOffset: -1,
+    id: "mapbox/light-v10",
+    accessToken: API_KEY
+}).addTo(myMap);
+
+
+// Function to determine circle color based on the magnitude 
+
+function getColor(magnitude){
+    switch(true){
+        case (magnitude <= 1):
+            return '#ccff66';
+            break;
+        case (magnitude <= 2):
+            return '#ffff66';
+            break;
+        case (magnitude <= 3):
+            return '#ff9933';
+            break;
+        case (magnitude <= 4):
+            return '#ff5050';
+            break;
+        case (magnitude <= 5):
+            return '#ff0066';
+            break;
+        case (magnitude > 5):
+            return '#990099';
+            break;
+        default:
+            return '#cccccc';
+            break;
     }
-    //Create circle markers for each earthquake in the data set.
-    var earthquakes = L.geoJSON(earthquakeData, {
-        pointToLayer: function(feature, latlng) {
-            // Make circle radius dependent on the magnitude and get color based on the same feature
-            return new L.CircleMarker(latlng, {
-                radius: feature.properties.mag * 5,
-                fillOpacity: 1,
-                color: getColor(feature.properties.mag)
-            })
+}
+
+// Function to determine circle radius based on the magnitude 
+
+function getRadius(magnitude){
+    switch(true){
+        case (magnitude <= 1):
+            return 5;
+            break;
+        case (magnitude <= 2):
+            return 7;
+            break;
+        case (magnitude <= 3):
+            return 9;
+            break;
+        case (magnitude <= 4):
+            return 11;
+            break;
+        case (magnitude <= 5):
+            return 13;
+            break;
+        case (magnitude > 5):
+            return 15;
+            break;
+        default:
+            return 1;
+            break;
+    }
+}  
+
+var GeoJSONUrl = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson"
+
+d3.json(GeoJSONUrl).then(function(data){
+
+    L.geoJson(data,{
+        pointToLayer: function (feature, latlng) {
+
+            // Create a circle marker
+
+            return L.circleMarker(latlng, {
+                radius: getRadius(feature.properties.mag), 
+                fillColor: getColor(feature.properties.mag), 
+                color: "#000",
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            });
         },
-        // Append popups on each feature
-        onEachFeature: onEachFeature
-    });
-    // Call create map function using the earthquakes data
-    createMap(earthquakes);
-};
+        onEachFeature: function(feature, layer){
+            layer.bindPopup(`<h3>${feature.properties.place}</h3><hr><span>Magnitude: ${feature.properties.mag}</span>`)
+        }
+    }).addTo(myMap);
+    
+    // Create a legend
 
-// Declare function to create map
-function createMap(earthquakes) {
-    // Get initial light layer
-    var mapLayer = L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
-      attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
-      tileSize: 512,
-      maxZoom: 18,
-      zoomOffset: -1,
-      id: "mapbox/light-v10",
-      accessToken: API_KEY
-    });
-    // Declare map object and set it to the map element in the DOM
-    var myMap = L.map("map", {
-        center: [29.876019, -107.224121],
-        zoom: 4.5,
-        layers: [mapLayer, earthquakes]
-    });
-    // Create a legend for the map based on the earthquakes data and colors
-    var legend = L.control({position: "bottomright"});
-    legend.onAdd = function() {
-        var div = L.DomUtil.create("div", "info legend");
-        var colors = [
-            "rgb(183, 243, 77)",
-            "rgb(226, 243, 77)",
-            "rgb(243, 219, 77)",
-            "rgb(243, 186, 77)",
-            "rgb(240, 167, 107)",
-            "rgb(240, 107, 107)"];
-        var labels = [];
+    var legend = L.control({position: 'bottomright'});
+    legend.onAdd = function (map) {
 
-        var legendInfo = "<h1>Earthquake intensity<h1>" + 
-            "<div class=\"labels\">" +
-                "<div class=\"max\">5+</div>" +
-                "<div class=\"fourth\">4-5</div>" +
-                "<div class=\"third\">3-4</div>" +
-                "<div class=\"second\">2-3</div>" +
-                "<div class=\"first\">1-2</div>" +
-                "<div class=\"min\">0-1</div>" +
-            "</div>";
+        var div = L.DomUtil.create('div', 'info legend'),
+            mag = [0, 1, 2, 3, 4, 5]
+        
+        div.innerHTML += "<h4>Magnitude Level</h4><hr>"
 
-        div.innerHTML = legendInfo;
+        // looping through the magnitude levels and generate a label with a colored square for each level
 
-        colors.forEach(function(color) {
-            labels.push("<li style=\"background-color: " + color + "\"></li>");
-        });
-
-        div.innerHTML += "<ul>" + labels.join("") + "</ul>";
+        for (var i = 0; i < mag.length; i++) {
+            div.innerHTML +=
+                '<i style="background:' + getColor(mag[i] + 1) + '"></i> ' +
+                mag[i] + (mag[i + 1] ? '&ndash;' + mag[i + 1] + '<br>' : '+');
+        }
         return div;
     };
-    // Append label to the map
     legend.addTo(myMap);
-
-};
-
-// Get earthquakes data
-d3.json(url, function(data) {
-    // Create features with the earthquakes data
-    createFeatures(data.features)
+      
 });
