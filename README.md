@@ -1,7 +1,8 @@
 # Leaflet Homework: Visualizing Data with Leaflet
 
-[Click Here For Step 1!] (https://antwons116.github.io/leaflet-challenge/leaflet-step-1/index.html)
-[Click Here For Step 2!] (https://antwons116.github.io/leaflet-challenge/leaflet-step-2/index.html)
+[Click Here For Step 1!](https://antwons116.github.io/leaflet-challenge/leaflet-step-1/index.html)
+
+[Click Here For Step 2!](https://antwons116.github.io/leaflet-challenge/leaflet-step-2/index.html)
 
 ## Background
 
